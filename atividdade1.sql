@@ -19,6 +19,7 @@ CREATE TABLE categoria(
 CREATE TABLE livro(
     codigo_livro INT NOT NULL PRIMARY KEY,
     titulo VARCHAR(255) NOT NULL,
+    preco DECIMAL(10,2),
     codigo_categorico INT NOT NULL,
     autor VARCHAR(100) NOT NULL,
     FOREIGN KEY (codigo_categorico) REFERENCES categoria(codigo_categoria)
@@ -55,10 +56,10 @@ INSERT INTO categoria (codigo_categoria, descricao) VALUES
 (2, 'Ficção Científica'),
 (3, 'Biografia');
 
-INSERT INTO livro (codigo_livro, titulo, codigo_categorico, autor) VALUES
-(101, 'O Amor nos Tempos do Cólera', 1, 'Gabriel García Márquez'),
-(102, 'Duna', 2, 'Frank Herbert'),
-(103, 'Steve Jobs', 3, 'Walter Isaacson');
+INSERT INTO livro (codigo_livro, titulo, codigo_categorico, autor,preco) VALUES
+(101, 'O Amor nos Tempos do Cólera', 1, 'Gabriel García Márquez', 39.90),
+(102, 'Duna', 2, 'Frank Herbert', 49.90),
+(103, 'Steve Jobs', 3, 'Walter Isaacson', 59.90);
 
 INSERT INTO funcionario (cpf, nome, endereco, telefone, funcao) VALUES
 ('45678901234', 'Daniel Lima', 'Rua Verde, 321', '41966666666', 'Bibliotecário'),
@@ -87,3 +88,82 @@ FROM
     INNER JOIN categoria c ON l.codigo_categorico = c.codigo_categoria;
     
     SELECT * FROM Historico_Emprestimos;
+
+
+
+
+
+
+    --------------PARTE 2-----------------
+
+
+
+
+
+
+    CREATE TABLE fornecedor (
+        cnpj VARCHAR(14) NOT NULL PRIMARY KEY,
+        nome VARCHAR(100) NOT NULL,
+        telefone VARCHAR(15) NOT NULL
+    );
+
+    CREATE TABLE compra (
+        codigo_compra INT NOT NULL PRIMARY KEY,
+        cnpj_fornecedor VARCHAR(14) NOT NULL,
+        cpf_funcionario VARCHAR(11) NOT NULL,
+        valor_total DECIMAL(10,2) NOT NULL,
+        data_compra DATE NOT NULL,
+        FOREIGN KEY (cnpj_fornecedor) REFERENCES fornecedor(cnpj),
+        FOREIGN KEY (cpf_funcionario) REFERENCES funcionario(cpf)
+    );
+
+    CREATE TABLE compraLivro (
+        codigo_livro INT NOT NULL,
+        codigo_compra INT NOT NULL,
+        quantidade INT NOT NULL,
+        PRIMARY KEY (codigo_livro, codigo_compra),
+        FOREIGN KEY (codigo_livro) REFERENCES livro(codigo_livro),
+        FOREIGN KEY (codigo_compra) REFERENCES compra(codigo_compra)
+    );
+
+    CREATE VIEW Relatorio_Compras_Livros AS
+    SELECT
+        f.nome AS nome_fornecedor,
+        func.nome AS nome_funcionario,
+        c.codigo_compra,
+        l.titulo AS titulo_livro,
+        cl.quantidade,
+        c.valor_total,
+        c.data_compra
+    FROM
+        compra c
+        INNER JOIN fornecedor f ON c.cnpj_fornecedor = f.cnpj
+        INNER JOIN funcionario func ON c.cpf_funcionario = func.cpf
+        INNER JOIN compraLivro cl ON c.codigo_compra = cl.codigo_compra
+        INNER JOIN livro l ON cl.codigo_livro = l.codigo_livro;
+
+
+    INSERT INTO fornecedor (cnpj, nome, telefone) VALUES
+    ('12345678000199', 'Livraria Central', '11333333333'),
+    ('98765432000188', 'Mundo dos Livros', '21944444444'),
+    ('45678912000177', 'Papelaria e Cia', '31955555555');
+
+    INSERT INTO compra (codigo_compra, cnpj_fornecedor, cpf_funcionario, valor_total, data_compra) VALUES
+    (1, '12345678000199', '45678901234', 199.90, '2024-06-10'),
+    (2, '98765432000188', '56789012345', 299.85, '2024-06-12'),
+    (3, '45678912000177', '67890123456', 149.75, '2024-06-15');
+
+    INSERT INTO compraLivro (codigo_livro, codigo_compra, quantidade) VALUES
+    (101, 1, 2),
+    (102, 1, 1),
+    (103, 2, 3),
+    (101, 3, 1),
+    (103, 3, 2);
+
+    SELECT * FROM Relatorio_Compras_Livros;
+
+
+
+
+
+    
