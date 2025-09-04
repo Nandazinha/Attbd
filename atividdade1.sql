@@ -166,7 +166,13 @@ FROM
     --------------PARTE 3-----------------
 
 
-    CREATE TABLE Especialidades (
+    drop database Hospital;   
+   
+   create database Hospital;
+   
+   use Hospital;
+   
+   CREATE TABLE Especialidades (
         codigo_especialidade INT NOT NULL PRIMARY KEY,
         nome_especialidade VARCHAR(100) NOT NULL
     );
@@ -215,3 +221,5 @@ FROM
         (1, 'Lucas Silva', '2024-06-20', 1),
         (2, 'Ana Costa', '2024-06-21', 2),
         (3, 'Carlos Mendes', '2024-06-22', 3);
+        
+        select * from Equipe_Atendimento;
