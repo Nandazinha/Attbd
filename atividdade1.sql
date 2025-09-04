@@ -163,7 +163,40 @@ FROM
     SELECT * FROM Relatorio_Compras_Livros;
 
 
+    --------------PARTE 3-----------------
 
 
+    CREATE TABLE Especialidades (
+        codigo_especialidade INT NOT NULL PRIMARY KEY,
+        nome_especialidade VARCHAR(100) NOT NULL
+    );
 
-    
+    CREATE TABLE Medicos (
+        codigo_medico INT NOT NULL PRIMARY KEY,
+        nome_medico VARCHAR(100) NOT NULL,
+        email_medico VARCHAR(100) NOT NULL,
+        codigo_especialidade INT NOT NULL,
+        FOREIGN KEY (codigo_especialidade) REFERENCES Especialidades(codigo_especialidade)
+    );
+
+    CREATE TABLE Atendimentos (
+        codigo_atendimento INT NOT NULL PRIMARY KEY,
+        nome_paciente VARCHAR(100) NOT NULL,
+        data_atendimento DATE NOT NULL,
+        codigo_medico INT NOT NULL,
+        FOREIGN KEY (codigo_medico) REFERENCES Medicos(codigo_medico)
+    );
+
+    CREATE VIEW Equipe_Atendimento AS
+    SELECT
+        e.codigo_especialidade,
+        e.nome_especialidade,
+        m.nome_medico,
+        m.email_medico,
+        a.codigo_atendimento,
+        a.nome_paciente,
+        a.data_atendimento
+    FROM
+        Atendimentos a
+        INNER JOIN Medicos m ON a.codigo_medico = m.codigo_medico
+        INNER JOIN Especialidades e ON m.codigo_especialidade = e.codigo_especialidade;
