@@ -200,3 +200,18 @@ FROM
         Atendimentos a
         INNER JOIN Medicos m ON a.codigo_medico = m.codigo_medico
         INNER JOIN Especialidades e ON m.codigo_especialidade = e.codigo_especialidade;
+
+        INSERT INTO Especialidades (codigo_especialidade, nome_especialidade) VALUES
+        (1, 'Cardiologia'),
+        (2, 'Pediatria'),
+        (3, 'Ortopedia');
+
+        INSERT INTO Medicos (codigo_medico, nome_medico, email_medico, codigo_especialidade) VALUES
+        (1, 'Dr. João Martins', 'joao.martins@hospital.com', 1),
+        (2, 'Dra. Maria Oliveira', 'maria.oliveira@hospital.com', 2),
+        (3, 'Dr. Pedro Souza', 'pedro.souza@hospital.com', 3);
+
+        INSERT INTO Atendimentos (codigo_atendimento, nome_paciente, data_atendimento, codigo_medico) VALUES
+        (1, 'Lucas Silva', '2024-06-20', 1),
+        (2, 'Ana Costa', '2024-06-21', 2),
+        (3, 'Carlos Mendes', '2024-06-22', 3);
