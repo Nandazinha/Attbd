@@ -223,3 +223,7 @@ FROM
         (3, 'Carlos Mendes', '2024-06-22', 3);
         
         select * from Equipe_Atendimento;
+
+
+--------------PARTE 4-----------------
+
