@@ -227,3 +227,205 @@ FROM
 
 --------------PARTE 4-----------------
 
+
+CREATE TABLE Clientes (
+    codigo_cliente INT NOT NULL PRIMARY KEY,
+    nome_cliente VARCHAR(100) NOT NULL,
+    cidade VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE Vendedores (
+    codigo_vendedor INT NOT NULL PRIMARY KEY,
+    nome_vendedor VARCHAR(100) NOT NULL,
+    email_vendedor VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE Categorias (
+    codigo_categoria INT NOT NULL PRIMARY KEY,
+    nome_categoria VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE Produtos (
+    codigo_produto INT NOT NULL PRIMARY KEY,
+    nome_produto VARCHAR(100) NOT NULL,
+    preco DECIMAL(10,2) NOT NULL,
+    codigo_categoria INT NOT NULL,
+    FOREIGN KEY (codigo_categoria) REFERENCES Categorias(codigo_categoria)
+);
+
+CREATE TABLE Pedidos (
+    codigo_pedido INT NOT NULL PRIMARY KEY,
+    data_pedido DATE NOT NULL,
+    valor_total DECIMAL(10,2) NOT NULL,
+    codigo_cliente INT NOT NULL,
+    codigo_vendedor INT NOT NULL,
+    FOREIGN KEY (codigo_cliente) REFERENCES Clientes(codigo_cliente),
+    FOREIGN KEY (codigo_vendedor) REFERENCES Vendedores(codigo_vendedor)
+);
+
+CREATE TABLE Itens_Pedido (
+    codigo_pedido INT NOT NULL,
+    codigo_produto INT NOT NULL,
+    quantidade INT NOT NULL,
+    PRIMARY KEY (codigo_pedido, codigo_produto),
+    FOREIGN KEY (codigo_pedido) REFERENCES Pedidos(codigo_pedido),
+    FOREIGN KEY (codigo_produto) REFERENCES Produtos(codigo_produto)
+);
+
+-- Dados de exemplo
+INSERT INTO Clientes VALUES
+(1, 'Carlos Silva', 'São Paulo'),
+(2, 'Maria Souza', 'Rio de Janeiro'),
+(3, 'João Pereira', 'Belo Horizonte'),
+(4, 'Ana Lima', 'Curitiba');
+
+INSERT INTO Vendedores VALUES
+(1, 'Fernanda Costa', 'fernanda@vendas.com'),
+(2, 'Roberto Alves', 'roberto@vendas.com');
+
+INSERT INTO Categorias VALUES
+(1, 'Eletrônicos'),
+(2, 'Livros'),
+(3, 'Roupas');
+
+INSERT INTO Produtos VALUES
+(1, 'Notebook', 3500.00, 1),
+(2, 'Smartphone', 2500.00, 1),
+(3, 'Livro SQL', 120.00, 2),
+(4, 'Camisa Polo', 80.00, 3),
+(5, 'Tablet', 1800.00, 1);
+
+INSERT INTO Pedidos VALUES
+(1, '2024-01-10', 7000.00, 1, 1),
+(2, '2024-02-15', 120.00, 2, 2),
+(3, '2024-03-20', 2580.00, 3, 1),
+(4, '2024-04-05', 8000.00, 1, 2),
+(5, '2023-12-25', 80.00, 4, 1),
+(6, '2024-05-10', 3500.00, 2, 2),
+(7, '2024-06-01', 1800.00, 3, 1),
+(8, '2024-06-15', 2500.00, 4, 2),
+(9, '2024-06-20', 120.00, 1, 1),
+(10, '2024-06-25', 80.00, 2, 2);
+
+INSERT INTO Itens_Pedido VALUES
+(1, 1, 2),
+(1, 2, 1),
+(2, 3, 1),
+(3, 2, 1),
+(3, 4, 1),
+(4, 1, 2),
+(4, 2, 2),
+(5, 4, 1),
+(6, 1, 1),
+(7, 5, 1),
+(8, 2, 1),
+(9, 3, 1),
+(10, 4, 1);
+
+-- View Boletim_Pedidos
+CREATE VIEW Boletim_Pedidos AS
+SELECT
+    p.codigo_pedido,
+    c.nome_cliente,
+    p.data_pedido,
+    p.valor_total,
+    c.cidade
+FROM
+    Pedidos p
+    INNER JOIN Clientes c ON p.codigo_cliente = c.codigo_cliente;
+
+-- View Produto_Categoria
+CREATE VIEW Produto_Categoria AS
+SELECT
+    pr.nome_produto,
+    ca.nome_categoria
+FROM
+    Produtos pr
+    INNER JOIN Categorias ca ON pr.codigo_categoria = ca.codigo_categoria;
+
+-- View Vendedor_Pedido
+CREATE VIEW Vendedor_Pedido AS
+SELECT
+    v.nome_vendedor,
+    p.codigo_pedido,
+    c.nome_cliente,
+    p.data_pedido
+FROM
+    Pedidos p
+    INNER JOIN Vendedores v ON p.codigo_vendedor = v.codigo_vendedor
+    INNER JOIN Clientes c ON p.codigo_cliente = c.codigo_cliente;
+
+-- View Cliente_MaiorCompra
+CREATE VIEW Cliente_MaiorCompra AS
+SELECT
+    c.nome_cliente,
+    p.data_pedido,
+    p.valor_total
+FROM
+    Pedidos p
+    INNER JOIN Clientes c ON p.codigo_cliente = c.codigo_cliente
+WHERE
+    p.valor_total > 5000.00;
+
+-- View Categoria_MaisVendida
+CREATE VIEW Categoria_MaisVendida AS
+SELECT
+    ca.nome_categoria,
+    SUM(ip.quantidade) AS quantidade_total_vendida
+FROM
+    Itens_Pedido ip
+    INNER JOIN Produtos pr ON ip.codigo_produto = pr.codigo_produto
+    INNER JOIN Categorias ca ON pr.codigo_categoria = ca.codigo_categoria
+GROUP BY
+    ca.nome_categoria;
+
+-- View Cliente_TotalPedidos
+CREATE VIEW Cliente_TotalPedidos AS
+SELECT
+    c.nome_cliente,
+    c.cidade,
+    COUNT(p.codigo_pedido) AS total_pedidos
+FROM
+    Clientes c
+    LEFT JOIN Pedidos p ON c.codigo_cliente = p.codigo_cliente
+GROUP BY
+    c.codigo_cliente, c.nome_cliente, c.cidade;
+
+-- View Vendedor_Faturamento
+CREATE VIEW Vendedor_Faturamento AS
+SELECT
+    v.nome_vendedor,
+    COUNT(p.codigo_pedido) AS total_pedidos,
+    SUM(p.valor_total) AS total_vendas
+FROM
+    Vendedores v
+    LEFT JOIN Pedidos p ON v.codigo_vendedor = p.codigo_vendedor
+GROUP BY
+    v.codigo_vendedor, v.nome_vendedor;
+
+-- View Produtos_NaoVendidos
+CREATE VIEW Produtos_NaoVendidos AS
+SELECT
+    pr.*
+FROM
+    Produtos pr
+WHERE
+    pr.codigo_produto NOT IN (
+        SELECT DISTINCT ip.codigo_produto
+        FROM Itens_Pedido ip
+        INNER JOIN Pedidos p ON ip.codigo_pedido = p.codigo_pedido
+        WHERE YEAR(p.data_pedido) = 2024
+    );
+
+-- View Clientes_Premium
+CREATE VIEW Clientes_Premium AS
+SELECT
+    c.nome_cliente,
+    c.cidade
+FROM
+    Clientes c
+    INNER JOIN Pedidos p ON c.codigo_cliente = p.codigo_cliente
+GROUP BY
+    c.codigo_cliente, c.nome_cliente, c.cidade
+HAVING
+    COUNT(p.codigo_pedido) >= 10;
