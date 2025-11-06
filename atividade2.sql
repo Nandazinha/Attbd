@@ -1,4 +1,4 @@
-drop database biblioteca;
+DROP DATABASE biblioteca;
 
 CREATE DATABASE biblioteca;
 
@@ -30,7 +30,7 @@ CREATE TABLE funcionario(
     nome VARCHAR(100) NOT NULL,
     endereco VARCHAR(100) NOT NULL,
     telefone VARCHAR(15) NOT NULL,
-    funcao varchar(50) NOT NULL
+    funcao VARCHAR(50) NOT NULL
 );
 
 CREATE TABLE emprestimo(
@@ -56,7 +56,7 @@ INSERT INTO categoria (codigo_categoria, descricao) VALUES
 (2, 'Ficção Científica'),
 (3, 'Biografia');
 
-INSERT INTO livro (codigo_livro, titulo, codigo_categorico, autor,preco) VALUES
+INSERT INTO livro (codigo_livro, titulo, codigo_categorico, autor, preco) VALUES
 (101, 'O Amor nos Tempos do Cólera', 1, 'Gabriel García Márquez', 39.90),
 (102, 'Duna', 2, 'Frank Herbert', 49.90),
 (103, 'Steve Jobs', 3, 'Walter Isaacson', 59.90);
@@ -72,13 +72,62 @@ INSERT INTO emprestimo (codigo_emprestimo, cpf_usuario, cpf_funcionario, codigo_
 (3, '34567890123', '67890123456', 103, '2024-06-07', '2024-06-21', '2024-06-20');
 
 
+/* ----------------------------------
+   Tabelas extras para atendimentos
+---------------------------------- */
+
+CREATE TABLE especialidade (
+    id_especialidade INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    nome_especialidade VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE medico (
+    id_medico INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    nome_medico VARCHAR(100) NOT NULL,
+    id_especialidade INT NOT NULL,
+    FOREIGN KEY (id_especialidade) REFERENCES especialidade(id_especialidade)
+);
+
+CREATE TABLE paciente (
+    id_paciente INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    nome_paciente VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE atendimento (
+    id_atendimento INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    id_medico INT NOT NULL,
+    id_paciente INT NOT NULL,
+    data_atendimento DATETIME NOT NULL,
+    FOREIGN KEY (id_medico) REFERENCES medico(id_medico),
+    FOREIGN KEY (id_paciente) REFERENCES paciente(id_paciente)
+);
+
+-- Inserindo exemplos de dados
+INSERT INTO especialidade (nome_especialidade) VALUES
+('Cardiologia'),
+('Pediatria'),
+('Dermatologia');
+
+INSERT INTO medico (nome_medico, id_especialidade) VALUES
+('Dr. João Cardoso', 1),
+('Dra. Marina Alves', 2),
+('Dr. Paulo Lima', 3);
+
+INSERT INTO paciente (nome_paciente) VALUES
+('Lucas Santos'),
+('Fernanda Oliveira'),
+('Pedro Costa');
+
+INSERT INTO atendimento (id_medico, id_paciente, data_atendimento) VALUES
+(1, 1, '2024-07-01 10:00:00'),
+(1, 2, '2024-07-03 14:00:00'),
+(2, 3, '2024-07-05 09:30:00'),
+(3, 1, '2024-07-06 11:00:00');
 
 
-
-
-
-
-/* começo das procedures */
+/* ----------------------------------
+   Procedures originais + nova
+---------------------------------- */
 
 CREATE TABLE IF NOT EXISTS fornecedor (
     codigo_fornecedor INT NOT NULL PRIMARY KEY,
@@ -144,4 +193,23 @@ BEGIN
     ORDER BY c.data_compra DESC;
 END //
 
+/* NOVA PROCEDURE SOLICITADA */
+CREATE PROCEDURE Proc_AtendimentosPorEspecialidade(IN p_especialidade VARCHAR(100))
+BEGIN
+    SELECT
+        esp.nome_especialidade AS Especialidade,
+        med.nome_medico AS Medico,
+        pac.nome_paciente AS Paciente,
+        ate.data_atendimento AS Data_Atendimento
+    FROM atendimento ate
+    JOIN medico med ON ate.id_medico = med.id_medico
+    JOIN paciente pac ON ate.id_paciente = pac.id_paciente
+    JOIN especialidade esp ON med.id_especialidade = esp.id_especialidade
+    WHERE esp.nome_especialidade = p_especialidade
+    ORDER BY ate.data_atendimento;
+END //
+
 DELIMITER ;
+
+CALL Proc_AtendimentosPorEspecialidade('Cardiologia');
+-- CALL Proc_UsuariosComEmprestimosAtrasados();
